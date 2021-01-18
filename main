@@ -1,0 +1,121 @@
+
+#include <tchar.h>
+#include <windows.h>
+
+LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
+
+TCHAR szClassName[] = _T("CodeBlocksWindowsApp");
+HWND TextBox, SendButton, TextField;
+
+
+int WINAPI WinMain(HINSTANCE hThisInstance,
+    HINSTANCE hPrevInstance,
+    LPSTR lpszArgument,
+    int nCmdShow)
+{
+    HWND hwnd;
+    MSG messages;
+    WNDCLASSEX wincl;
+
+    wincl.hInstance = hThisInstance;
+    wincl.lpszClassName = szClassName;
+    wincl.lpfnWndProc = WindowProcedure;
+    wincl.style = CS_DBLCLKS;
+    wincl.cbSize = sizeof(WNDCLASSEX);
+
+    wincl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+    wincl.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+    wincl.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wincl.lpszMenuName = NULL;  
+    wincl.cbClsExtra = 0;
+    wincl.cbWndExtra = 0;
+
+    wincl.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
+
+    if (!RegisterClassEx(&wincl))
+        return 0;
+
+    hwnd = CreateWindowEx(
+        0,                  
+        szClassName,        
+        _T("Synonym"),      
+        WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT,
+        CW_USEDEFAULT,
+        500,
+        370,
+        HWND_DESKTOP,
+        NULL,
+        hThisInstance,
+        NULL
+    );
+
+    /* Make the window visible on the screen */
+    ShowWindow(hwnd, nCmdShow);
+
+
+    while (GetMessage(&messages, NULL, 0, 0))
+    {
+        TranslateMessage(&messages);
+        DispatchMessage(&messages);
+    }
+
+    return messages.wParam;
+}
+
+
+
+
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)                  
+    {
+    case WM_CREATE:
+
+        TextBox = CreateWindow(L"EDIT",
+            L"",
+            WS_BORDER | WS_CHILD | WS_VISIBLE,
+            10, 300, 390, 20,
+            hwnd, (HMENU)1, NULL, NULL);
+
+        SendButton = CreateWindow(L"BUTTON",
+            L"Send",
+            WS_VISIBLE | WS_CHILD | WS_BORDER,
+            410, 300, 65, 20,
+            hwnd, (HMENU)2, NULL, NULL);
+
+        TextField = CreateWindow(L"EDIT",
+            L"",
+            WS_VISIBLE | WS_CHILD | WS_BORDER | ES_READONLY,
+            10, 90, 465, 200,
+            hwnd, (HMENU)3, NULL, NULL);
+        break;
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case 2: 
+
+            int len = GetWindowTextLength(TextBox) + 1;
+            char* text = new char[len];
+            GetWindowTextA(TextBox, &text[0], len);
+
+            SendMessage(TextField, EM_SETSEL, 0, -1);
+            SendMessage(TextField, EM_REPLACESEL, 0, (LPARAM)&text[0]);
+            delete[] text;
+
+            SetWindowText(TextBox, L"");
+
+            break;
+        }
+        break;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);      
+        break;
+    default:                    
+        return DefWindowProc(hwnd, message, wParam, lParam);
+    }
+
+    return 0;
+}
